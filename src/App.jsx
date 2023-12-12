@@ -1,17 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
+import { db } from "../utilities/firebase";
+import { collection, getDocs } from "firebase/firestore";
 
 export default function App() {
-  {
-    /*For a useState: todos is getter, setTodos is setter */
-  }
-  const [todos, setTodos] = useState([
-    {
-      id: 1,
-      task: "Enter your To-Do Above",
-      done: false,
-    },
-  ]);
+  {/* The below useEffect can be reused in other projects to fetch data from database */}
+  useEffect(() => {
+    const todoReference = collection(db, "todos");
+    const getData = async () => {
+      const data = await getDocs(todoReference);
+      const todos = data.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setTodos(todos)
+    };
+    getData();
+  }, []);
+
+  const [todos, setTodos] = useState([]);
 
   const [newTodos, setNewTodos] = useState("");
 
