@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import { db } from "../utilities/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+} from "firebase/firestore";
 
 export default function App() {
-  {/* The below useEffect can be reused in other projects to fetch data from database */}
+  {
+    /* The below useEffect can be reused in other projects to fetch data from database */
+  }
   useEffect(() => {
     const todoReference = collection(db, "todos");
     const getData = async () => {
@@ -13,7 +21,7 @@ export default function App() {
         id: doc.id,
         ...doc.data(),
       }));
-      setTodos(todos)
+      setTodos(todos);
     };
     getData();
   }, []);
@@ -22,32 +30,33 @@ export default function App() {
 
   const [newTodos, setNewTodos] = useState("");
 
-  const addTodo = (text) => {
-    if (text) {
+  const addTodo = async (task) => {
+    if (!task) return;
+    const todoReference = collection(db, "todos");
+    await addDoc(todoReference, {
+      task: task,
+      done: false,
+    }).then((docReference) => {
+      const newTodos = [
+        ...todos,
+        { id: docReference.id, task: task, done: false },
+      ];
+      setTodos(newTodos)
+    });
+    {
       const newTodoListForAddTodo = [
         ...todos,
-        { id: todos.length + 1, task: text, done: false },
+        { id: todoReference.id, task: task, done: false },
       ];
       setTodos(newTodoListForAddTodo);
       setNewTodos("");
-    } else if (
-      window.confirm(
-        "You did not enter any text. Do you still want to add a blank item?"
-      )
-    ) {
-      const newTodoListForAddTodo = [
-        ...todos,
-        { id: todos.length + 1, task: "", done: false },
-      ];
-      setTodos(newTodoListForAddTodo);
     }
   };
 
-  const deleteTodo = (id) => {
-    if (window.confirm("Are you sure you want to delete this item?")) {
-      const newTodoListForDeleteTodo = todos.filter((item) => item.id != id);
-      setTodos(newTodoListForDeleteTodo);
-    }
+  const deleteTodo = async (id) => {
+    await deleteDoc(doc(db, "todos", id));
+    const newTodoListForDeleteTodo = todos.filter((item) => item.id != id);
+    setTodos(newTodoListForDeleteTodo);
   };
 
   const updateTodoText = (id, task) => {
